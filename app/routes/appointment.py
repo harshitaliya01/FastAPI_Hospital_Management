@@ -8,7 +8,6 @@ from db import db
 
 router = APIRouter()
 
-
 @router.post("/create/appointment/")
 async def create_appointment(appointment:Appointment,current_user :dict=Depends(get_current_user)):
     try:
@@ -23,7 +22,7 @@ async def create_appointment(appointment:Appointment,current_user :dict=Depends(
         if not doctor:
             raise HTTPException(status_code=400, detail="Doctor not found")
         
-        now = datetime.now()
+        datetime.now()
         last_appointment = await db.appointment.find_one(
             {"doctor_id": ObjectId(appointment.doctor_id)},
             sort=[("date", -1), ("time", -1)]
@@ -121,9 +120,17 @@ async def cancel_appointment(appointment_id: str, current_user: dict = Depends(g
         if patient:
             if str(appointment["patient_id"]) != str(patient["_id"]):
                 raise HTTPException(status_code=403, detail="You can cancel only your own appointments")
+            
+            elif appointment["status"] == "completed":
+                raise HTTPException(status_code=400, detail="Appointment already completed by staff now you can not cancel")
             else:
                 if appointment["status"] == "cancelled":
                     raise HTTPException(status_code=400, detail="Appointment already cancelled")
+                
+            await db.appointment.update_one(
+                {"_id": ObjectId(appointment_id)},
+                {"$set": {"status": "cancelled by patient"}}
+            )
         
         if doctor:
             if str(appointment["doctor_id"]) != str(doctor["_id"]):
@@ -132,14 +139,19 @@ async def cancel_appointment(appointment_id: str, current_user: dict = Depends(g
                 if appointment["status"] == "cancelled":
                     raise HTTPException(status_code=400, detail="Appointment already cancelled")
                 
+            await db.appointment.update_one(
+                {"_id": ObjectId(appointment_id)},
+                {"$set": {"status": "cancelled"}}
+            )
+                
         if staff:
             if appointment["status"] == "cancelled":
                     raise HTTPException(status_code=400, detail="Appointment already cancelled")
 
-        await db.appointment.update_one(
-            {"_id": ObjectId(appointment_id)},
-            {"$set": {"status": "cancelled"}}
-        )
+            await db.appointment.update_one(
+                {"_id": ObjectId(appointment_id)},
+                {"$set": {"status": "cancelled"}}
+            )
 
         return {"msg": "Appointment cancelled successfully"}
 
@@ -150,7 +162,7 @@ async def cancel_appointment(appointment_id: str, current_user: dict = Depends(g
 
 #    ===>>>>> COMPLETE <<<<<======    
 @router.put("/complete/appointment/{appointment_id}/")
-async def cancel_appointment(appointment_id: str, current_user: dict = Depends(get_current_user)):
+async def complete_appointment(appointment_id: str, current_user: dict = Depends(get_current_user)):
     try:
         appointment = await db.appointment.find_one({"_id": ObjectId(appointment_id)})
         if not appointment:
@@ -167,9 +179,14 @@ async def cancel_appointment(appointment_id: str, current_user: dict = Depends(g
         if doctor:
             if str(appointment["doctor_id"]) != str(doctor["_id"]):
                 raise HTTPException(status_code=403, detail="You can complete only your own appointments")
+            
+            elif appointment["status"] == "cancelled by patient":
+                raise HTTPException(status_code=400, detail="Appointment already cancelled by patient now you can not complete")
+            
             else:
                 if appointment["status"] == "completed":
                     raise HTTPException(status_code=400, detail="Appointment already completed")
+
                 
         if staff:
             if appointment["status"] == "completed":
@@ -180,7 +197,7 @@ async def cancel_appointment(appointment_id: str, current_user: dict = Depends(g
             {"$set": {"status": "completed"}}
         )
 
-        return {"msg": "Appointment cancelled successfully"}
+        return {"msg": "Appointment completed successfully"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

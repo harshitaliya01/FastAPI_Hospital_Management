@@ -1,6 +1,6 @@
-from fastapi import APIRouter,HTTPException,Depends
+from fastapi import APIRouter,HTTPException
 from models.models import Patient,PatientLogin
-from utils.utility import hash_password,create_access_token,verify_password,get_current_user
+from utils.utility import hash_password,create_access_token,verify_password
 
 from db import db
 
@@ -48,6 +48,3 @@ async def login(usertry:PatientLogin):
         return {"message":"Success Login","access_token": token, "token_type": "bearer"}
     except Exception as e:
         return str(e)
-    
-
-    

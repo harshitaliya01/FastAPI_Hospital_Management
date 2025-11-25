@@ -1,7 +1,6 @@
 from models.models import Staff,StaffLogin
-from fastapi import APIRouter,HTTPException,Depends
-from utils.utility import hash_password,create_access_token,verify_password,get_current_user
-
+from fastapi import APIRouter,HTTPException
+from utils.utility import hash_password,create_access_token,verify_password
 import os
 from db import db
 
@@ -48,5 +47,3 @@ async def login(usertry:StaffLogin):
         return {"message":"Success Login","access_token": token, "token_type": "bearer"}
     except Exception as e:
         return str(e)
-    
-

@@ -1,7 +1,5 @@
-from typing import Optional, List
-from datetime import datetime
+from typing import Optional
 from pydantic import EmailStr
-from beanie import Link
 from pydantic import BaseModel,Field
 from typing_extensions import Annotated
 
@@ -11,7 +9,6 @@ class Patient(BaseModel):
     email: EmailStr
     password:Annotated[str,Field(min_length=6)]
     medical_history: str
-
 
 class PatientLogin(BaseModel):
     email:str
@@ -39,16 +36,7 @@ class StaffLogin(BaseModel):
     email:str
     password:str
 
-
 class Appointment(BaseModel):
     doctor_id :str
     reason:str
-
-
-
-class Report(BaseModel):
-    patient: Link[Patient]
-    summary: Optional[str] = None
-    summarized: bool = False
-    created_at: datetime = Field(default_factory=datetime.utcnow)
 
