@@ -1,11 +1,9 @@
 from typing import Optional, List
 from datetime import datetime
 from pydantic import EmailStr
-from beanie import Document, Link
+from beanie import Link
 from pydantic import BaseModel,Field
 from typing_extensions import Annotated
-from dotenv import load_dotenv
-load_dotenv()
 
 class Patient(BaseModel):
     name: str
